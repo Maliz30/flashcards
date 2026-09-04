@@ -4,10 +4,10 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -15,7 +15,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.mariaalice.flashcards.dtos.ConfidenceLevelUpdateRequest;
+import com.mariaalice.flashcards.dtos.FlashcardUpdateRequest;
 import com.mariaalice.flashcards.entities.Flashcard;
+import com.mariaalice.flashcards.enums.ConfidenceLevel;
 import com.mariaalice.flashcards.repositories.FlashcardRepository;
 
 @RestController
@@ -70,6 +73,55 @@ public class FlashcardController {
             return ResponseEntity.notFound().build();
         }
     }
+
+    @PatchMapping(path = "/flashcard/{id}")
+    public ResponseEntity<Flashcard> patchFlashcard(@PathVariable Long id, @RequestBody FlashcardUpdateRequest request){
+        Optional<Flashcard> existingFlashcard = flashcardRepository.findById(id);
+
+        if(existingFlashcard.isPresent()){
+            Flashcard oldFlashcard = existingFlashcard.get();
+            
+            String answer = request.answer();
+            String category = request.category();
+            ConfidenceLevel confidenceLevel = request.confidenceLevel();
+            String question = request.question();
+
+            if(answer != null){
+                oldFlashcard.setAnswer(answer);
+            }
+            if(category != null){
+                oldFlashcard.setCategory(category);
+            }
+            if(confidenceLevel != null){
+                oldFlashcard.setConfidenceLevel(confidenceLevel);
+            }
+            if(question != null){
+                oldFlashcard.setQuestion(question);
+            }
+
+            Flashcard updatedFlashcard = flashcardRepository.save(oldFlashcard);
+            return ResponseEntity.ok(updatedFlashcard);
+        } else{
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PatchMapping(path = "/flashcard/{id}/confidence-level")
+    public ResponseEntity<Flashcard> patchConfidenceLevelFlashcard(@PathVariable Long id, @RequestBody ConfidenceLevelUpdateRequest request){
+        Optional<Flashcard> existingFlashcard = flashcardRepository.findById(id);
+
+        if(existingFlashcard.isPresent()){
+            Flashcard oldFlashcard = existingFlashcard.get();
+            ConfidenceLevel confidenceLevel = request.confidenceLevel();
+            oldFlashcard.setConfidenceLevel(confidenceLevel);
+
+            Flashcard updatedFlashcard = flashcardRepository.save(oldFlashcard);
+            return ResponseEntity.ok(updatedFlashcard);
+        } else{
+            return ResponseEntity.notFound().build();
+        }
+    }
+
 
     @DeleteMapping(path = "/flashcard/{id}")
     public ResponseEntity<Void> deleteFlashcard(@PathVariable Long id){
